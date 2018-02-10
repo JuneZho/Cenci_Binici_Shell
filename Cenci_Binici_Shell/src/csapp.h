@@ -143,11 +143,11 @@ void P(sem_t *sem);
 void V(sem_t *sem);
 
 /* Rio (Robust I/O) package */
-ssize_t rio_readn(int fd, void *usrbuf, size_t n);
-ssize_t rio_writen(int fd, void *usrbuf, size_t n);
+ssize_t rio_readn(int fd, char *usrbuf, size_t n);
+ssize_t rio_writen(int fd, char *usrbuf, size_t n);
 void rio_readinitb(rio_t *rp, int fd); 
-ssize_t	rio_readnb(rio_t *rp, void *usrbuf, size_t n);
-ssize_t	rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen);
+ssize_t	rio_readnb(rio_t *rp, char *usrbuf, size_t n);
+ssize_t	rio_readlineb(rio_t *rp, char *usrbuf, size_t maxlen);
 
 /* Wrappers for Rio package */
 ssize_t Rio_readn(int fd, void *usrbuf, size_t n);

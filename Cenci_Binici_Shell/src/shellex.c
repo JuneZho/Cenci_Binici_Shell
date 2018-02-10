@@ -113,7 +113,7 @@ int main()
 
         while (1) {
             /* Read */
-            printf ("> ");
+            printf ("lsh> ");
             fgets(cmdline, MAXLINE, stdin);
             if (feof(stdin))
                 exit(0);
