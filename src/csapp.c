@@ -526,7 +526,7 @@ void V(sem_t *sem)
  * rio_readn - robustly read n bytes (unbuffered)
  */
 /* $begin rio_readn */
-ssize_t rio_readn(int fd, void *usrbuf, size_t n) 
+ssize_t rio_readn(int fd, char *usrbuf, size_t n)
 {
     size_t nleft = n;
     ssize_t nread;
@@ -552,7 +552,7 @@ ssize_t rio_readn(int fd, void *usrbuf, size_t n)
  * rio_writen - robustly write n bytes (unbuffered)
  */
 /* $begin rio_writen */
-ssize_t rio_writen(int fd, void *usrbuf, size_t n) 
+ssize_t rio_writen(int fd, char *usrbuf, size_t n)
 {
     size_t nleft = n;
     ssize_t nwritten;
@@ -626,7 +626,7 @@ void rio_readinitb(rio_t *rp, int fd)
  * rio_readnb - Robustly read n bytes (buffered)
  */
 /* $begin rio_readnb */
-ssize_t rio_readnb(rio_t *rp, void *usrbuf, size_t n) 
+ssize_t rio_readnb(rio_t *rp, char *usrbuf, size_t n)
 {
     size_t nleft = n;
     ssize_t nread;
@@ -652,7 +652,7 @@ ssize_t rio_readnb(rio_t *rp, void *usrbuf, size_t n)
  * rio_readlineb - robustly read a text line (buffered)
  */
 /* $begin rio_readlineb */
-ssize_t rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen) 
+ssize_t rio_readlineb(rio_t *rp, char *usrbuf, size_t maxlen)
 {
     int n, rc;
     char c, *bufp = usrbuf;
@@ -811,3 +811,6 @@ int Open_listenfd(int port)
     return rc;
 }
 /* $end csapp.c */
+
+
+
