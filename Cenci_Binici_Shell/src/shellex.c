@@ -100,6 +100,12 @@ void eval (char *cmdline)
 /* If first arg is a builtin command, run it and return true */
 int builtin_command(char **argv) 
 {
+    if (!strcmp(argv[0], "$")) /*  */
+    {
+        printf("%s", "Command entered = $\n");
+        return 1;
+    }
+    
     if (!strcmp(argv[0], "quit")) /* quit command */
 	exit(0);  
 
