@@ -101,7 +101,7 @@ void eval (char *cmdline)
 
 char* retrievePath() 
 {
-    printf("%s", "Retrieving path...\n");
+    printf("%s\n", environ[0]);
     return "hello";
 
 }
