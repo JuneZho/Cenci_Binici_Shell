@@ -49,6 +49,7 @@ pid_t Fork(void)
 
 void Execve(const char *filename, char *const argv[], char *const envp[]) 
 {
+    printf("%s", "hello sir!!");
     if (execve(filename, argv, envp) < 0)
 	unix_error("Execve error");
 }

@@ -102,7 +102,99 @@ int builtin_command(char **argv)
 {
     if (!strcmp(argv[0], "quit")) /* quit command */
 	exit(0);  
+
+    if (!strcmp(argv[0], "SIGHUP")) /* TERMINATE | Terminal line hangup */
+    printf("%s", "Command entered = SIGHUP\n");
+
+    if (!strcmp(argv[0], "SIGINT")) /* TERMINATE | Interrupt from keyboard */
+    printf("%s", "Command entered = SIGINT\n");
+
+    if (!strcmp(argv[0], "SIGQUIT")) /* TERMINATE | Quit from keyboard */
+    printf("%s", "Command entered = SIGQUIT\n");
+
+    if (!strcmp(argv[0], "SIGILL")) /* TERMINATE | Illegal Instruction */
+    printf("%s", "Command entered = SIGILL\n");
+    
+    if (!strcmp(argv[0], "SIGTRAP")) /* TERMINATE & DUMP CORE| Trace trap */
+    printf("%s", "Command entered = SIGTRAP\n");
+
+    if (!strcmp(argv[0], "SIGABRT")) /* TERMINATE & DUMP CORE| Abort signal from abort function */
+    printf("%s", "Command entered = SIGABRT\n");
+
+    if (!strcmp(argv[0], "SIGBUS")) /* TERMINATE | Bus error */
+    printf("%s", "Command entered = SIGBUS\n");
+
+    if (!strcmp(argv[0], "SIGFPE")) /* TERMINATE & DUMP CORE| Floating-point exception */
+    printf("%s", "Command entered = SIGFPE\n");
+
+    if (!strcmp(argv[0], "SIGKILL")) /* TERMINATE | Kill program */
+    printf("%s", "Command entered = SIGKILL\n");
+
+    if (!strcmp(argv[0], "SIGUSR1")) /* TERMINATE | User-defined signal 1 */
+    printf("%s", "Command entered = SIGUSR1\n");
+
+    if (!strcmp(argv[0], "SIGSEGV")) /* TERMINATE & DUMP CORE| Invalid memory reference (seg fault) */
+    printf("%s", "Command entered = SIGSEGV\n");
+
+    if (!strcmp(argv[0], "SIGUSR2")) /* TERMINATE | User-defined signal 1 */
+    printf("%s", "Command entered = SIGUSR2\n");
+
+    if (!strcmp(argv[0], "SIGPIPE")) /* TERMINATE | Wrote to a pipe with no reader */
+    printf("%s", "Command entered = SIGPIPE\n");
+
+    if (!strcmp(argv[0], "SIGALRM")) /* TERMINATE | Timer signal from alarm function */
+    printf("%s", "Command entered = SIGALRM\n");
+
+    if (!strcmp(argv[0], "SIGTERM")) /* TERMINATE | Software termination signal */
+    printf("%s", "Command entered = SIGTERM\n");
+
+    if (!strcmp(argv[0], "SIGSTKFLT")) /* TERMINATE | Stack fault on coprocessor */
+    printf("%s", "Command entered = SIGSTKFLT\n");
+
+    if (!strcmp(argv[0], "SIGCHLD")) /* IGNORE | A child process has stopped or terminated */
+    printf("%s", "Command entered = SIGCONT\n");
+
+    if (!strcmp(argv[0], "SIGCONT")) /* IGNORE | Continue process if stopped  */
+    printf("%s", "Command entered = SIGCONT\n");
+
+    if (!strcmp(argv[0], "SIGSTOP")) /* STOP UNTIL NEXT SIGCONT | Stop signal not from terminal */
+    printf("%s", "Command entered = SIGSTOP\n");
+
+    if (!strcmp(argv[0], "SIGTSTP")) /* STOP UNTIL NEXT SIGCONT | Stop signal from terminal */
+    printf("%s", "Command entered = SIGTTIN\n");
+
+    if (!strcmp(argv[0], "SIGTTIN")) /* STOP UNTIL NEXT SIGCONT | Background process read from terminal */
+    printf("%s", "Command entered = SIGTTIN\n");
+
+    if (!strcmp(argv[0], "SIGTTOU")) /* STOP UNTIL NEXT SIGCONT | Background process wrote to terminal */
+    printf("%s", "Command entered = SIGTTOU\n");
+
+    if (!strcmp(argv[0], "SIGURG")) /* IGNORE | Urgent condition on socket */
+    printf("%s", "Command entered = SIGURG\n");
+    
+    if (!strcmp(argv[0], "SIGXCPU")) /* TERMINATE | CPU time limit exceeded */
+    printf("%s", "Command entered = SIGXCPU\n");
+
+    if (!strcmp(argv[0], "SIGXFSZ")) /* TERMINATE | File size limit exceeded */
+    printf("%s", "Command entered = SIGXFSZ\n");
+
+    if (!strcmp(argv[0], "SIGVTALRM")) /* TERMINATE | Virtual timer expired */
+    printf("%s", "Command entered = SIGVTALRM\n");
+
+    if (!strcmp(argv[0], "SIGPROF")) /* TERMINATE | Profiling timer expired */
+    printf("%s", "Command entered = SIGPROF\n");
+
+    if (!strcmp(argv[0], "SIGWINCH")) /* IGNORE | Window size changed */
+    printf("%s", "Command entered = SIGWINCH\n");
+
+    if (!strcmp(argv[0], "SIGIO")) /* TERMINATE | I/O now possible on a descriptor */
+    printf("%s", "Command entered = SIGIO\n");
+
+    if (!strcmp(argv[0], "SIGPWR")) /* TERMINATE | Power failure */
+    printf("%s", "Command entered = SIGPWR\n");
+    
     if (!strcmp(argv[0], "&"))    /* Ignore singleton & */
+    
 	return 1;
     return 0;                     /* Not a builtin command */
 }
