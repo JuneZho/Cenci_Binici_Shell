@@ -12,6 +12,7 @@ void eval(char *cmdline);
 int parseline(char *buf, char **argv);
 int builtin_command(char **argv);
 extern char **environ;
+char* retrievePath(); 
 
 void unix_error(char *msg) /* Unix-style error */
 {
@@ -97,12 +98,25 @@ void eval (char *cmdline)
         return;
 }
 
+
+char* retrievePath() 
+{
+    printf("%s", "Retrieving path...\n");
+    return "hello";
+
+}
 /* If first arg is a builtin command, run it and return true */
 int builtin_command(char **argv) 
 {
     if (*(argv[0]) == '$') /*  */
     {
         printf("%s", "Command entered = $\n");
+        char **followingString = argv[0] + 1;
+        printf("%s", followingString);
+        if(!strcmp(followingString, "PATH")) {
+            retrievePath();
+        }
+        
         return 1;
     }
 
