@@ -108,9 +108,24 @@ char* retrievePath()
 /* If first arg is a builtin command, run it and return true */
 int builtin_command(char **argv) 
 {
+    /*char *word = argv;
+    printf("%d\n", (unsigned)strlen(argv));
+    printf("%s\n", argv[0] + 2); // 2 chars away
+    printf("%d\n", (unsigned)strlen(word));
+    char *totalString ="";
+    totalString = malloc((signed)strlen(argv));
+    char **curPointer = argv;
+    printf("%s\n", curPointer); // 2 chars away
 
-    /*printf("%s\n", argv);
-    char values[] = "";
+    //while ()
+    for (int i = 0; i < (signed)strlen(argv)+3; i++)
+    {
+        //strcpy(totalString, argv[0] + i);
+        strcat(totalString, argv[0] + i);
+        printf("%s\n", totalString);
+    }*/
+    
+    /*char values[] = "";
 
     //strcat(values, argv[0] + 1);
     //printf("%s\n", values);
@@ -136,7 +151,6 @@ int builtin_command(char **argv)
         if(!strcmp(followingString, "PATH")) {
             retrievePath();
         }
-        
         return 1;
     }
 
