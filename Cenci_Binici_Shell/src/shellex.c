@@ -119,6 +119,20 @@ int builtin_command(char **argv)
         
         return 1;
     }
+    //const char pipes[10] = "|";
+    //char *chars_array = *(strtok(argv, "|"));
+    //printf("%s\n", chars_array);
+    /*if (chars_array != NULL)
+    {
+        printf("%s YOOOOOO!!!\n", chars_array);
+    }*/
+    //printf("%s\n", chars_array);
+    /*while (chars_array) 
+    {
+        printf("%s\n", chars_array);
+       // chars_array = *(strtok(NULL, "|"));
+    }*/
+
 
     if (!strcmp(argv[0], "quit")) /* quit command */
 	exit(0);  

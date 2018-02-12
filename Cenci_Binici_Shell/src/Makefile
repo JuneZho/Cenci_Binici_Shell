@@ -1,11 +1,16 @@
+LIBS = -pthread
+
 CC = gcc
 
 CFLAGS= -c -Wall
 
 default: all
 
-all:		shellex.c csapp.o
-		$(CC) $(CFLAGS) shellex.c csapp.o -o lsh
+all:		shellex.o csapp.o
+		$(CC) shellex.o -o lsh
+
+shellex.o:	shellex.c
+		$(CC) $(CFLAGS) shellex.c
 
 csapp.o:	csapp.c csapp.h
 		$(CC) $(CFLAGS) csapp.c
