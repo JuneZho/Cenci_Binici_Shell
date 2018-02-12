@@ -108,7 +108,27 @@ char* retrievePath()
 /* If first arg is a builtin command, run it and return true */
 int builtin_command(char **argv) 
 {
-    if (*(argv[0]) == '$') /*  */
+
+    /*printf("%s\n", argv);
+    char values[] = "";
+
+    //strcat(values, argv[0] + 1);
+    //printf("%s\n", values);
+    //return 1;
+    if (*(argv) != NULL)
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            char *combo = malloc(strlen(*(argv[i]))+strlen(*(argv[i]+1))+1);
+            strcpy(combo, *(argv[i]));
+            strcat(combo, *(argv[i]+1));
+            printf("%s\n", combo);
+            return 1;
+        }
+        return 1;
+    }
+    printf("%s", *(argv));*/
+    if (*(argv[0]) == '$') /* Checks for the $ command */
     {
         printf("%s", "Command entered = $\n");
         char **followingString = argv[0] + 1;
@@ -119,20 +139,18 @@ int builtin_command(char **argv)
         
         return 1;
     }
-    //const char pipes[10] = "|";
-    //char *chars_array = *(strtok(argv, "|"));
-    //printf("%s\n", chars_array);
-    /*if (chars_array != NULL)
-    {
-        printf("%s YOOOOOO!!!\n", chars_array);
-    }*/
-    //printf("%s\n", chars_array);
-    /*while (chars_array) 
-    {
-        printf("%s\n", chars_array);
-       // chars_array = *(strtok(NULL, "|"));
-    }*/
 
+    char* input = *(argv);
+    if (strchr(argv, "1 | 2 | 3") != NULL)
+    {
+        char *pt;
+        pt = strtok (*(argv),"|");
+        while (pt != NULL) {
+            printf("%s\n", pt);
+            pt = strtok (NULL, "|");
+        }
+        return 1;
+    }
 
     if (!strcmp(argv[0], "quit")) /* quit command */
 	exit(0);  
