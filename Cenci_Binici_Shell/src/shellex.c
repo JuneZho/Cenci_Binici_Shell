@@ -12,7 +12,7 @@ void eval(char *cmdline);
 int parseline(char *buf, char **argv);
 int builtin_command(char **argv);
 extern char **environ;
-char* retrievePath(); 
+char* retrieveEnvironVar(); 
 
 void unix_error(char *msg) /* Unix-style error */
 {
@@ -99,11 +99,9 @@ void eval (char *cmdline)
 }
 
 
-char* retrievePath() 
+char* retrieveEnvironVar(char* inputVariable) 
 {
-    printf("%s\n", environ[0]);
-    return "hello";
-
+    return getenv(inputVariable);
 }
 /* If first arg is a builtin command, run it and return true */
 int builtin_command(char **argv) 
@@ -145,15 +143,26 @@ int builtin_command(char **argv)
     printf("%s", *(argv));*/
     if (*(argv[0]) == '$') /* Checks for the $ command */
     {
-        printf("%s", "Command entered = $\n");
         char **followingString = argv[0] + 1;
-        printf("%s", followingString);
-        if(!strcmp(followingString, "PATH")) {
-            retrievePath();
-        }
+        printf("%s\n", followingString);
+        printf("%s\n", retrieveEnvironVar(followingString));
         return 1;
     }
 
+    if (!strcmp(argv[0], "echo")) /* echo is read */
+    {
+        if (*(argv[0] + 5) == '$') /* Checks for the $ command */
+        {
+            char **followingString = argv[0] + 6;
+            printf("%s\n", followingString);
+            printf("%s\n", retrieveEnvironVar(followingString)); // 
+            return 1;
+        }
+        char **followingString = argv[0] + 5;
+        printf("%s\n", followingString);
+        return 1;
+    }
+    
     char* input = *(argv);
     if (strchr(argv, "1 | 2 | 3") != NULL)
     {
