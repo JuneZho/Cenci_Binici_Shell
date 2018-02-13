@@ -148,22 +148,27 @@ int builtin_command(char **argv)
         printf("%s\n", retrieveEnvironVar(followingString));
         return 1;
     }
-
-    if (!strcmp(argv[0], "echo")) /* echo is read */
-    {
-        if (*(argv[0] + 5) == '$') /* Checks for the $ command */
+    
+    if (argv[1] != NULL){
+        if (*(argv[1]) == '$') /* echo is read */
         {
-            char **followingString = argv[0] + 6;
-            printf("%s\n", followingString);
-            printf("%s\n", retrieveEnvironVar(followingString)); // 
-            return 1;
+                char **followingString = argv[1] + 1;
+                //printf("%s\n", followingString);
+                char **a = retrieveEnvironVar(followingString); // 
+                argv[1] = a;
+
+                //printf("%s\n", argv[1]);
+
+                //execve(argv[0], argv, environ)
+                return 0;
+            
+            // char **followingString = argv[0] + 5;
+            // printf("%s\n", followingString);
+            // return 1;
         }
-        char **followingString = argv[0] + 5;
-        printf("%s\n", followingString);
-        return 1;
     }
     
-    char* input = *(argv);
+    //char* input = *(argv);
     if (strchr(argv, "1 | 2 | 3") != NULL)
     {
         char *pt;
@@ -329,8 +334,8 @@ int builtin_command(char **argv)
         return 1;
     }
     if (!strcmp(argv[0], "&"))    /* Ignore singleton & */
-    
-	return 1;
+    return 1;
+
     return 0;                     /* Not a builtin command */
 }
 
