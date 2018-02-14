@@ -43,13 +43,13 @@ pid_t Fork(void)
 
     if ((pid = fork()) < 0)
 	unix_error("Fork error");
+    printf("%d", getpid());
     return pid;
 }
 /* $end forkwrapper */
 
 void Execve(const char *filename, char *const argv[], char *const envp[]) 
 {
-    printf("%s", "hello sir!!");
     if (execve(filename, argv, envp) < 0)
 	unix_error("Execve error");
 }

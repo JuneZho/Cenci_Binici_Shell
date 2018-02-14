@@ -1,9 +1,11 @@
+#define _XOPEN_SOURCE
 #include "csapp.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #define MAXARGS 128
 //#define MAXLINE 8192
@@ -18,14 +20,6 @@ void unix_error(char *msg) /* Unix-style error */
 {
     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
     exit(0);
-}
-pid_t Fork(void)
-{ 
-    pid_t pid;
-
-    if ((pid = Fork()) < 0)
-        unix_error("Fork error");
-    return pid;
 }
 /* parseline - Parse the command line and build the argv array */
 int parseline(char *buf, char **argv)
@@ -80,7 +74,7 @@ void eval (char *cmdline)
         
         if (!builtin_command(argv)) {
             if ((pid = fork()) == 0) {  /*Child runs user job  */
-                if (execve(argv[0], argv, environ) < 0) {
+                if (execvp(argv[0], argv) < 0) {
                     printf("%s: Command not found.\n", argv[0]);
                     exit(0);
                 }
@@ -141,30 +135,49 @@ int builtin_command(char **argv)
         return 1;
     }
     printf("%s", *(argv));*/
+
+    int lengthValue = strlen(argv[0]);
+    for(int i = 0;i < lengthValue; i++) {
+
+        if(*(argv[0]+i)== '=')
+        {
+            printf("%s\n", "you wrote = sign\n");
+            char* newVar = malloc(i+1);
+            memcpy(newVar, *(&(argv[0])), i);
+            printf("%s\n", newVar);
+
+            char newVarsValue[(lengthValue - i)];
+            memcpy(newVarsValue,  &*(argv[0]+i+1), lengthValue);
+            newVarsValue[lengthValue] = "\0";
+            
+            if (strlen(newVarsValue) == 0) unsetenv(newVar);
+            printf("%s\n", newVarsValue);
+            setenv(newVar, newVarsValue, 0);
+            argv[1] = newVar;
+            return 0;
+        }
+
+    }
     if (*(argv[0]) == '$') /* Checks for the $ command */
     {
         char **followingString = argv[0] + 1;
-        printf("%s\n", followingString);
+        //printf("%s\n", followingString);
+        //printf("%s\n", retrieveEnvironVar(followingString));
+        char **a = retrieveEnvironVar(followingString); //
         printf("%s\n", retrieveEnvironVar(followingString));
+        argv[1] = a;
         return 1;
     }
     
-    if (argv[1] != NULL){
+    if (argv[1] != NULL) {
         if (*(argv[1]) == '$') /* echo is read */
         {
                 char **followingString = argv[1] + 1;
-                //printf("%s\n", followingString);
                 char **a = retrieveEnvironVar(followingString); // 
+                //argv[0] = malloc(strlen(4 + 1 + strlen(argv[0])));
+                //strcat("/bin/", argv[0])f;
                 argv[1] = a;
-
-                //printf("%s\n", argv[1]);
-
-                //execve(argv[0], argv, environ)
                 return 0;
-            
-            // char **followingString = argv[0] + 5;
-            // printf("%s\n", followingString);
-            // return 1;
         }
     }
     
