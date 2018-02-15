@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <stdbool.h>
 
 #define MAXARGS 128
 //#define MAXLINE 8192
@@ -15,6 +18,7 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv);
 extern char **environ;
 char* retrieveEnvironVar(); 
+bool showU = false, showS = false, showP = false, showV = false, showI = false, showA = false, showL = false, showC = false;
 
 void unix_error(char *msg) /* Unix-style error */
 {
@@ -69,6 +73,21 @@ void eval (char *cmdline)
 
         strcpy(buf, cmdline);
         bg = parseline(buf, argv);
+
+        struct rusage usage;
+        struct timeval startU, startS;
+        long startP, startV, startI;
+        struct timeval endU, endS;
+        long endP, endV, endI;
+
+        getrusage(RUSAGE_SELF, &usage);
+        if (showU) startU = usage.ru_utime;
+        if (showS) startS = usage.ru_stime;
+        if (showP) startP = usage.ru_majflt;
+        if (showV) startV = usage.ru_nvcsw;
+        if (showI) startI = usage.ru_nivcsw;
+
+
         if (argv[0] == NULL)
             return;     /* Ignore empty lines */
         
@@ -89,6 +108,37 @@ void eval (char *cmdline)
             else
                 printf("%d %s", pid, cmdline);           
         }
+
+        getrusage(RUSAGE_SELF, &usage);
+        if (showU) 
+        {
+            endU = usage.ru_utime;
+            printf("Started at: %ld.%lds | ", startU.tv_sec, startU.tv_usec);
+            printf("Ended at: %ld.%lds\n", endU.tv_sec, endU.tv_usec);
+        }
+        if (showS) 
+        {
+            endS = usage.ru_stime;
+            printf("Started at: %ld.%lds | ", startS.tv_sec, startS.tv_usec);
+            printf("Ended at: %ld.%lds\n", endS.tv_sec, endS.tv_usec);
+        }
+        if (showP) 
+        {
+            endP = usage.ru_majflt;
+            printf("Number of Page Faults | %ld\n", endP, endP);
+        }
+        if (showV) 
+        {
+            printf("Started at: %ld.%lds | ", startV, startV);
+            printf("Ended at: %ld.%lds\n", endV, endV);
+        }
+        if (showI) 
+        {
+            endI = usage.ru_nivcsw;
+            printf("Started at: %ld.%lds | ", startI, startI);
+            printf("Ended at: %ld.%lds\n", endI, endI);
+        }
+
         return;
 }
 
@@ -137,7 +187,7 @@ int builtin_command(char **argv)
     printf("%s", *(argv));*/
 
     int lengthValue = strlen(argv[0]);
-    for(int i = 0;i < lengthValue; i++) {
+    for(int i = 0; i < lengthValue; i++) {
 
         if(*(argv[0]+i)== '=')
         {
@@ -154,7 +204,7 @@ int builtin_command(char **argv)
             printf("%s\n", newVarsValue);
             setenv(newVar, newVarsValue, 0);
             argv[1] = newVar;
-            return 0;
+            return 1;
         }
 
     }
@@ -181,6 +231,62 @@ int builtin_command(char **argv)
         }
     }
     
+
+    /* Stats commands */
+    if (!strcmp(argv[0], "stats"))
+    { 
+        if (!strcmp(argv[1], "-u")) {
+            showU = true;
+            return 1;
+        }
+        if (!strcmp(argv[1], "-s")) {
+            showS = true;
+            return 1;
+        }
+        if (!strcmp(argv[1], "-p")) {
+            showP = true;
+            return 1;
+        }
+        if (!strcmp(argv[1], "-v")) {
+            showV = true;
+            return 1;
+        }
+        if (!strcmp(argv[1], "-i")) {
+            showI = true;
+            return 1;
+        }
+        if (!strcmp(argv[1], "-a")) {
+            showU = true;
+            showS = true;
+            showP = true;
+            showV = true;
+            showI = true;
+            return 1;
+        }
+        if (!strcmp(argv[1], "-l")) {
+            if (!showU && !showS && !showP && !showV && !showI) printf("%s\n", "No Stats enabled.");
+            else {
+                       printf("%s\n","-------------------------------------------");
+            if (showU) printf("%s\n","-u | CPU Time in User mode enabled");
+            if (showS) printf("%s\n","-s | CPU Time in System/Kernel mode enabled");
+            if (showP) printf("%s\n","-p | Number of Hard Page Faults enabled");
+            if (showV) printf("%s\n","-v | Voluntary Context Switches enabled");
+            if (showI) printf("%s\n","-i | Involuntary Context Switches enabled");
+                       printf("%s\n","-------------------------------------------");
+            }
+            return 1;
+        }
+        if (!strcmp(argv[1], "-c")) {
+            showU = false;
+            showS = false;
+            showP = false;
+            showV = false;
+            showI = false;
+            return 1;
+        }
+        return 0;
+
+    }
     //char* input = *(argv);
     if (strchr(argv, "1 | 2 | 3") != NULL)
     {
