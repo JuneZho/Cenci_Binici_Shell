@@ -17,9 +17,10 @@ void eval(char *cmdline);
 int parseline(char *buf, char **argv);
 int builtin_command(char **argv);
 extern char **environ;
-char* retrieveEnvironVar(); 
+char* retrieveEnvironVar();
+bool isRunning = 1; 
 bool showU = false, showS = false, showP = false, showV = false, showI = false, showA = false, showL = false, showC = false;
-
+char statOrder[6] = "";
 void unix_error(char *msg) /* Unix-style error */
 {
     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
@@ -110,33 +111,35 @@ void eval (char *cmdline)
         }
 
         getrusage(RUSAGE_SELF, &usage);
-        if (showU) 
-        {
-            endU = usage.ru_utime;
-            printf("Started at: %ld.%lds | ", startU.tv_sec, startU.tv_usec);
-            printf("Ended at: %ld.%lds\n", endU.tv_sec, endU.tv_usec);
-        }
-        if (showS) 
-        {
-            endS = usage.ru_stime;
-            printf("Started at: %ld.%lds | ", startS.tv_sec, startS.tv_usec);
-            printf("Ended at: %ld.%lds\n", endS.tv_sec, endS.tv_usec);
-        }
-        if (showP) 
-        {
-            endP = usage.ru_majflt;
-            printf("Number of Page Faults | %ld\n", endP, endP);
-        }
-        if (showV) 
-        {
-            printf("Started at: %ld.%lds | ", startV, startV);
-            printf("Ended at: %ld.%lds\n", endV, endV);
-        }
-        if (showI) 
-        {
-            endI = usage.ru_nivcsw;
-            printf("Started at: %ld.%lds | ", startI, startI);
-            printf("Ended at: %ld.%lds\n", endI, endI);
+        for (int i = 0; i < strlen(statOrder); i++) {
+            if (statOrder[i] == 'u')
+            {
+                endU = usage.ru_utime;
+                printf("Started at: %ld.%lds | ", startU.tv_sec, startU.tv_usec);
+                printf("Ended at: %ld.%lds\n", endU.tv_sec, endU.tv_usec);
+            }
+             if (statOrder[i] == 's')
+            {
+                endS = usage.ru_stime;
+                printf("Started at: %ld.%lds | ", startS.tv_sec, startS.tv_usec);
+                printf("Ended at: %ld.%lds\n", endS.tv_sec, endS.tv_usec);
+            }
+             if (statOrder[i] == 'p')
+            {
+                endP = usage.ru_majflt;
+                printf("Number of Page Faults | %ld\n", endP, endP);
+            }
+             if (statOrder[i] == 'v')
+            {
+                printf("Started at: %ld.%lds | ", startV, startV);
+                printf("Ended at: %ld.%lds\n", endV, endV);
+            }
+             if (statOrder[i] == 'i')
+            {
+                endI = usage.ru_nivcsw;
+                printf("Started at: %ld.%lds | ", startI, startI);
+                printf("Ended at: %ld.%lds\n", endI, endI);
+            }
         }
 
         return;
@@ -191,23 +194,33 @@ int builtin_command(char **argv)
 
         if(*(argv[0]+i)== '=')
         {
-            printf("%s\n", "you wrote = sign\n");
             char* newVar = malloc(i+1);
             memcpy(newVar, *(&(argv[0])), i);
-            printf("%s\n", newVar);
 
             char newVarsValue[(lengthValue - i)];
             memcpy(newVarsValue,  &*(argv[0]+i+1), lengthValue);
             newVarsValue[lengthValue] = "\0";
-            
-            if (strlen(newVarsValue) == 0) unsetenv(newVar);
-            printf("%s\n", newVarsValue);
+
+            char *oldValue[100];
+            *oldValue = getenv(newVar);
+            if (strlen(oldValue) == 0)  // Overwriting a null & existing value
+            {
+                unsetenv(newVar);
+                setenv(newVar, newVarsValue, 1);
+                return 1;
+            }
+            if (strlen(newVarsValue) == 0) // Setting a value to null
+            { 
+                unsetenv(newVar);
+                return 1;
+            }
             setenv(newVar, newVarsValue, 0);
             argv[1] = newVar;
             return 1;
         }
 
     }
+
     if (*(argv[0]) == '$') /* Checks for the $ command */
     {
         char **followingString = argv[0] + 1;
@@ -231,31 +244,12 @@ int builtin_command(char **argv)
         }
     }
     
-
     /* Stats commands */
     if (!strcmp(argv[0], "stats"))
     { 
-        if (!strcmp(argv[1], "-u")) {
-            showU = true;
-            return 1;
-        }
-        if (!strcmp(argv[1], "-s")) {
-            showS = true;
-            return 1;
-        }
-        if (!strcmp(argv[1], "-p")) {
-            showP = true;
-            return 1;
-        }
-        if (!strcmp(argv[1], "-v")) {
-            showV = true;
-            return 1;
-        }
-        if (!strcmp(argv[1], "-i")) {
-            showI = true;
-            return 1;
-        }
         if (!strcmp(argv[1], "-a")) {
+            memset(statOrder, 0, sizeof statOrder);
+            strcat(statOrder, "uspvi");
             showU = true;
             showS = true;
             showP = true;
@@ -264,7 +258,7 @@ int builtin_command(char **argv)
             return 1;
         }
         if (!strcmp(argv[1], "-l")) {
-            if (!showU && !showS && !showP && !showV && !showI) printf("%s\n", "No Stats enabled.");
+            if (!showU && !showS && !showP && !showV && !showI) printf("%s\n", "No stats enabled.");
             else {
                        printf("%s\n","-------------------------------------------");
             if (showU) printf("%s\n","-u | CPU Time in User mode enabled");
@@ -277,16 +271,114 @@ int builtin_command(char **argv)
             return 1;
         }
         if (!strcmp(argv[1], "-c")) {
+            memset(statOrder, 0, sizeof statOrder);
             showU = false;
             showS = false;
             showP = false;
             showV = false;
             showI = false;
+            printf("The new stat order is: %s (END)\n", statOrder);
             return 1;
         }
-        return 0;
+        for (int i = 1; argv[i] != NULL; i++)
+        {
+            if (!strcmp(argv[i], "-u")) {
+                if (showU) {
+                    showU = false;
+                    for (int j = 0; j < strlen(statOrder); j++)
+                    {
+                        if (statOrder[j] == 'u') {
+                            memmove(&statOrder[j], &statOrder[j + 1], strlen(statOrder) - j);
+                        }
+                    }
+                }
+                else {
+                    showU = true;
+                   int len = strlen(statOrder);
+                    statOrder[len] = 'u';
+                    statOrder[len+1] = '\0';
+                }
+            
+            }
+            if (!strcmp(argv[i], "-s")) {
+                if (showS) {
+                    showS = false;
+                    for (int j = 0; j < strlen(statOrder); j++)
+                    {
+                        if (statOrder[j] == 's') {
+                            memmove(&statOrder[j], &statOrder[j + 1], strlen(statOrder) - j);
+                        }
+                    }
+                }
+                else {
+                    showS = true;
+                    int len = strlen(statOrder);
+                    statOrder[len] = 's';
+                    statOrder[len+1] = '\0';
+                }
+                
+            }
+            if (!strcmp(argv[i], "-p")) {
+                if(showP) {
+                    showP = false;
+                    for (int j = 0; j < strlen(statOrder); j++)
+                    {
+                        if (statOrder[j] == 'p') {
+                            memmove(&statOrder[j], &statOrder[j + 1], strlen(statOrder) - j);
+                        }
+                    }
+                }
+                else {
+                    showP = true;
+                    int len = strlen(statOrder);
+                    statOrder[len] = 'p';
+                    statOrder[len+1] = '\0';
+                }
+                
+            }
+            if (!strcmp(argv[i], "-v")) {
+                if(showV){
+                    showV = false;
+                    for (int j = 0; j < strlen(statOrder); j++)
+                    {
+                        if (statOrder[j] == 'v') {
+                            memmove(&statOrder[j], &statOrder[j + 1], strlen(statOrder) - j);
+                        }
+                    }
+                }
+                else {
+                    showV = true;
+                    int len = strlen(statOrder);
+                    statOrder[len] = 'v';
+                    statOrder[len+1] = '\0';
+                }
+                
+            }
+            if (!strcmp(argv[i], "-i")) {
+                if(showI)
+                {
+                    showI = false;
+                    for (int j = 0; j < strlen(statOrder); j++)
+                    {
+                        if (statOrder[j] == 'i') {
+                            memmove(&statOrder[j], &statOrder[j + 1], strlen(statOrder) - j);
+                        }
+                    }
+                }
+                else {
+                    showI = true;
+                    int len = strlen(statOrder);
+                    statOrder[len] = 'i';
+                    statOrder[len+1] = '\0';
+                }
+               
+            }
+        }
 
+        printf("The new stat order is: %s\n", statOrder);
+        return 1;
     }
+
     //char* input = *(argv);
     if (strchr(argv, "1 | 2 | 3") != NULL)
     {
@@ -458,11 +550,17 @@ int builtin_command(char **argv)
     return 0;                     /* Not a builtin command */
 }
 
+void InterruptHandler(int signal)
+{
+    isRunning = true;
+}
 int main()
 {
         char cmdline[MAXLINE]; /* Command line */
 
-        while (1) {
+        signal(SIGINT, InterruptHandler);
+
+        while (isRunning) {
             /* Read */
             printf ("lsh> ");
             fgets(cmdline, MAXLINE, stdin);
