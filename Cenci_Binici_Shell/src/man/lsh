@@ -1,0 +1,78 @@
+.TH lsh 1 "18 February, 2018" "version 1.0"
+
+.SH NAME
+    lsh - Lafayette Shell
+
+.SH COPYRIGHT
+lsh created by Julian Binici & Joseph Cenci 2018 for CS406: Operating Systems and Lafayette College.
+
+.SH DESCRIPTION
+lsh is a shell that implements basic mini-shell functions and utilizes execvp to process commands input by the user and relays the resulting values back to the user or modifies the environment appropriately.
+
+.SH BUILT-IN COMMANDS
+There are various built-in commands that the lsh minishell will appropriately read and process. The following list of commands will be read and processes given that the user has typed the correct syntax for the lsh to read.
+
+.B = 
+With the = symbol, instantiating variables for the environment is simple and easy to do. Just as a regular bash would, the variable introduced by the user along with its value should be typed as one string (no spaces). This allows for the program to parse the value and set the environmnent variable equal to the value provided. An example of such would be
+    |------------------
+    | lsh> var1=100
+    |------------------
+
+This will store var1 as 100 in the environment. To unset a variable the user should just provide the original variable with no value on the right side of the argument's = symbol. Looking for the  variable in the environment will show no value, and instead it read back (null) if the user searches the environment for the variable with the $ command.
+
+.B $ 
+The $ symbol will return back the value of the variable provided after the $ that is located within the environment. If the variable is found within the environment, the program will return its value on the proceeding line. If no value is found, the shell will return (null).
+
+.B echo
+Echo will read back the command provided to the user or the value held by the variable if it is found within the environment given that the user has provided a $. An example of such an interpretation is the following sequence of inputs.
+    |------------------
+    | lsh> var1=100
+    | lsh> $var1
+    | 100
+    | lsh> echo var1
+    | var1
+    | lsh> echo $var1
+    | 100
+    |------------------
+
+echo also works with exisiting values processed by execvp such as $PATH and others.
+
+.B stats [statsVal1] [statsVal2] [statsVal3] [statsVal4] [statsVal5]
+
+The stats command will provide the user with computer stastics that will be returned following each input. The user can toggle the following five statistics using the command -char associated with each.
+    |-------------------------------------------
+    | -u | CPU Time in User mode enabled
+    | -s | CPU Time in System/Kernel mode enabled
+    | -p | Number of Hard Page Faults enabled
+    | -v | Voluntary Context Switches enabled
+    | -i | Involuntary Context Switches enabled
+    |-------------------------------------------
+
+These stats can be toggled on and off by the user and relayed back in the order input by the user. If the user wants to turn on all 5 statistics, the user should type the following
+    |------------------
+    | lsh> stats -a
+    |------------------
+
+To print only particular stats in a specified order the user can type the stat flags out in a fashion similar to the following
+    |------------------
+    | lsh> stats -v -p -u
+    |------------------
+
+The next time the statistics are printed out, the statistics will be printed in the order of v p u. This will show Voluntary Context Switches, then Number of Hard Page Faults, and finally the CPU Time in User mode will be printed.
+To toggle off all of the statistics, the user can clear the statistics with the following input:
+    |------------------
+    | lsh> stats -c
+    |------------------
+
+The next time a process is run, no statistics will be produced. To double check and see which statistics the user has activated the user can use the following command to provide the list of activated statistics:
+    |------------------
+    | lsh> stats -l
+    |------------------
+
+If no statistics are enabled, the shell will tell the user that "No stats are enabled". 
+
+.SH 
+
+
+    
+
