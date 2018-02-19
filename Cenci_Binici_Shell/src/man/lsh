@@ -9,13 +9,27 @@ lsh created by Julian Binici & Joseph Cenci 2018 for CS406: Operating Systems an
 .SH DESCRIPTION
 lsh is a shell that implements basic mini-shell functions and utilizes execvp to process commands input by the user and relays the resulting values back to the user or modifies the environment appropriately.
 
+.SH SETTING UP
+To run the lsh: Open up a terminal window and change directory to be inside the project "src" folder. After that, run the following sequence of commands:
+    
 .SH BUILT-IN COMMANDS
 There are various built-in commands that the lsh minishell will appropriately read and process. The following list of commands will be read and processes given that the user has typed the correct syntax for the lsh to read.
+    |------------------
+    | user> make
+    | .
+    | .
+    | .
+    | user> ./lsh
+    | lsh>
+    |------------------
+
+Afterwords the user will be inside the lsh and can run commands designated and described within the minishell.
 
 .B = 
 With the = symbol, instantiating variables for the environment is simple and easy to do. Just as a regular bash would, the variable introduced by the user along with its value should be typed as one string (no spaces). This allows for the program to parse the value and set the environmnent variable equal to the value provided. An example of such would be
     |------------------
     | lsh> var1=100
+    | lsh>
     |------------------
 
 This will store var1 as 100 in the environment. To unset a variable the user should just provide the original variable with no value on the right side of the argument's = symbol. Looking for the  variable in the environment will show no value, and instead it read back (null) if the user searches the environment for the variable with the $ command.
@@ -33,6 +47,7 @@ Echo will read back the command provided to the user or the value held by the va
     | var1
     | lsh> echo $var1
     | 100
+    | lsh>
     |------------------
 
 echo also works with exisiting values processed by execvp such as $PATH and others.
@@ -40,13 +55,13 @@ echo also works with exisiting values processed by execvp such as $PATH and othe
 .B stats [statsVal1] [statsVal2] [statsVal3] [statsVal4] [statsVal5]
 
 The stats command will provide the user with computer stastics that will be returned following each input. The user can toggle the following five statistics using the command -char associated with each.
-    |-------------------------------------------
+    |--------------------------------------------
     | -u | CPU Time in User mode enabled
     | -s | CPU Time in System/Kernel mode enabled
     | -p | Number of Hard Page Faults enabled
     | -v | Voluntary Context Switches enabled
     | -i | Involuntary Context Switches enabled
-    |-------------------------------------------
+    |--------------------------------------------
 
 These stats can be toggled on and off by the user and relayed back in the order input by the user. If the user wants to turn on all 5 statistics, the user should type the following
     |------------------
@@ -54,9 +69,9 @@ These stats can be toggled on and off by the user and relayed back in the order 
     |------------------
 
 To print only particular stats in a specified order the user can type the stat flags out in a fashion similar to the following
-    |------------------
+    |--------------------
     | lsh> stats -v -p -u
-    |------------------
+    |--------------------
 
 The next time the statistics are printed out, the statistics will be printed in the order of v p u. This will show Voluntary Context Switches, then Number of Hard Page Faults, and finally the CPU Time in User mode will be printed.
 To toggle off all of the statistics, the user can clear the statistics with the following input:
@@ -71,8 +86,56 @@ The next time a process is run, no statistics will be produced. To double check 
 
 If no statistics are enabled, the shell will tell the user that "No stats are enabled". 
 
-.SH 
+.SH Piping
+Piping is performed by using the | symbol which will utilize stdout and stdin in repetition for the number of pipes that were provided to shell by the user. The command on the left side of the pipe will write its output to stdout and then the command on the right side of the pipe will read the command in stdin and execute it. Piping can be used to run a series of commands such as the following:
+    |------------------
+    | lsh> ls -l | sort
+    |------------------
 
+The pipe symbol will be detected and replaced with a NULL operator, and then exectue the commands appropriately.
 
-    
+.SH EXAMPLE PROGRAMS
+The Cenci_Binici Project comes with it a foo.c file that can be run after compiling with the following command:
+    |----------------------
+    | lsh> gcc -o foo foo.c
+    |----------------------
 
+The program can then be run within the minishell with the following command:
+    |------------------
+    | lsh> ./foo
+    |------------------
+
+This will create an infinite sleeping loop that acts as a counter. This program can be killed via signals and the program will exit out to the minishell.
+
+.SH SIGNAL HANDLING
+The lsh minishell has the ability to catch signals input by the user for Ctrl-C and CTRL-Z. If the user is only within the lsh proces, any signal command will not interrupt the user, and instead the parent process will continue running in the foreground. If a program is being run in the foreground, such as foo.exe, the user can hit Ctrl-C to kill and reap the process. If the user types Ctrl-Z instead the program will just kill the process and return to the lsh minishell prompt. The Ctrl-C function performs the following:
+    |---------------------------------------------------------------
+    | lsh> ./foo
+    | Sleeping: 1
+    | Sleeping: 2
+    | Sleeping: 3
+    | ^Clsh> (user can type here)
+    | lsh> ps j
+    | USER   PID  PPID  PGID   SESS JOBC STAT   TT       TIME COMMAND
+    | Joe  22531 22519 22531      0    1 S    s000    0:01.30 -bash
+    | Joe  85309 22531 85309      0    1 S+   s000    0:00.00 ./lsh
+    | lsh> 
+    |----------------------------------------------------------------
+
+And for the Ctrl-Z function:
+    |----------------------------------------------------------------
+    | lsh> ./foo
+    | Sleeping: 1
+    | Sleeping: 2
+    | Sleeping: 3
+    | ^Zlsh> (user can type here)
+    | lsh> ps j
+    | USER   PID  PPID  PGID   SESS JOBC STAT   TT       TIME COMMAND
+    | Joe  22531 22519 22531      0    1 S    s000    0:01.30 -bash
+    | Joe  42239 22531 42239      0    1 S+   s000    0:00.00 ./lsh
+    | Joe  42925 42239 42239      0    1 T+   s000    0:00.00 ./foo
+    | lsh>
+    |-----------------------------------------------------------------
+
+.SH CLOSING
+Thank you for using Cenci_Binici's lsh! Happy processing!

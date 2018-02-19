@@ -11,6 +11,8 @@
 #include <stdbool.h>
 
 #define MAXARGS 128
+#define READ_END 0
+#define WRITE_END 1
 //#define MAXLINE 8192
 /* Function prototypes */
 void eval(char *cmdline);
@@ -18,13 +20,26 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv);
 extern char **environ;
 char* retrieveEnvironVar();
-volatile bool isRunning = false; 
+volatile bool isRunning = true; 
 bool showU = false, showS = false, showP = false, showV = false, showI = false, showA = false, showL = false, showC = false;
 char statOrder[6] = "";
 void unix_error(char *msg) /* Unix-style error */
 {
     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
     exit(0);
+}
+void sigint_handler(int signal)
+{
+    //printf("Killed child with pid %d\n", getpid());
+}
+void sigtstp_handler(int signal)
+{
+    //printf("Stopped child with pid %d\n", getpid());
+}
+
+void sigkill(int p)
+{
+    isRunning = true;
 }
 /* parseline - Parse the command line and build the argv array */
 int parseline(char *buf, char **argv)
@@ -81,13 +96,6 @@ void eval (char *cmdline)
         struct timeval endU, endS;
         long endP, endV, endI;
 
-        getrusage(RUSAGE_SELF, &usage);
-        if (showU) startU = usage.ru_utime;
-        if (showS) startS = usage.ru_stime;
-        if (showP) startP = usage.ru_majflt;
-        if (showV) startV = usage.ru_nvcsw;
-        if (showI) startI = usage.ru_nivcsw;
-
 
         if (argv[0] == NULL)
             return;     /* Ignore empty lines */
@@ -114,48 +122,147 @@ void eval (char *cmdline)
             } 
 
         }
+
+        /* Detecting if pipes exist within the user input and then parsing the lien with strtok. */
         if (pipesExist) {
-            const char *cmds[pipeAmount];
+            const char *cmds[pipeAmount + 1];
             char *pt;
-            pt = strtok (cmdline,"|");
+            pt = strtok (cmdline," | "); // Looking for the pipe | symbol
             int valueHere = 0;
+            //int counter = 0;
             while (pt != NULL) {
                 cmds[valueHere] = pt;
+                
+                //char* current[strlen(pt)+ 1];
+                //current = pt;
+                printf("HERE: [%s]", pt);
                 valueHere++;
-                pt = strtok (NULL, "|");
+                pt = strtok (NULL, " | "); // Nulling the array parsed.
+                
+                if (pt == NULL)
+                {
+                    char* lastVal = cmds[valueHere-1];
+                    lastVal[strlen(lastVal) - 1] = 0;
+                    printf("LAST item beith: [%s]\n", lastVal);
+                    cmds[valueHere - 1] = lastVal;
+                    //memmove(&cmds[valueHere], &cmds[j + 1], strlen(statOrder) - j);
+                    printf("LAST TERM: [%s]\n",  cmds[valueHere-1]);
+                    //cmds[valueHere] = 0;
+                }
+                
             }
-            for (int i = 0; i < pipeAmount + 1; i++){
-                printf("Yes! %s\n", cmds[i]);
-                execvp("/usr/bin/ls", "ls");
+            printf("THE COMMAND IS NOW: %s\n", cmdline);
+            cmds[pipeAmount + 1] = '\0'; // finishes the command array list with the terminal 0 in the string.
+            for (int i = 0; i < pipeAmount + 2; i++)
+            {
+                printf("Yes! [%s]\n", cmds[i]);
             }
+            int pid, pid_ls, pid_grep;
+            int pipefd[2];
             
-            /*int fd[2];
-            int ret;
-            char buf[100];
-
-            ret = pipe(fd);
-
-            if (ret == -1) {
-                perror("pipe");
-                exit(1);
+            // STOP LOOP HERE
+            if (pipe(pipefd) == -1) {
+                fprintf(stderr, "parent: Failed to create pipe\n");
+                return;
             }
-            pid = fork();
+            // END STOP LOOP
 
-            if (pid == 0) {
-                execlp( "/bin/ps", "-A", NULL );
+            pid_grep = fork();
+
+            if (pid_grep == -1) {
+                fprintf(stderr, "parent: Could not fork process to run grep\n");
+                return;
+            } else if (pid_grep == 0) {
+                fprintf(stdout, "child: grep child will now run\n");
+
+                // Set fd[0] (stdin) to the read end of the pipe
+                if (dup2(pipefd[READ_END], STDIN_FILENO) == -1) {
+                    fprintf(stderr, "child: grep dup2 failed\n");
+                    return;
+                }
+
+                // Close the pipe now that we've duplicated it
+                close(pipefd[READ_END]);
+                close(pipefd[WRITE_END]);
+
+                /*// Setup the arguments/environment to call
+                char *new_argv[] = { "/bin/grep", argv[2], 0 };
+                char *envp[] = { "HOME=/", "PATH=/bin:/usr/bin", "USER=brandon", 0 };
+
+                // Call execve(2) which will replace the executable image of this
+                // process
+                new_argv[0] = "sort";
+                new_argv[1] = 0;*/
+                fprintf(stderr,"[%s]\n",cmds[1]);
+                fprintf(stderr, "Command: %s\nArgs[0]: %s\nArgs[1]: %s\n", cmds[0], cmds[0], cmds[1]);
+
+                //execvp("sort", new_argv);  // Try putting cmds[1] in place of "sort"
+                execvp(cmds[1], cmds);
+                // Execution will never continue in this process unless execve returns
+                // because of an error
+                fprintf(stderr, "child: Oops, %s failed!\n", cmds[1]);
+		        fprintf(stderr, "Errno(%d): %s\n", errno, strerror(errno));
+                return;
+                }
+                pid_ls = fork();
+
+                if (pid_ls == -1) {
+                    fprintf(stderr, "parent: Could not fork process to run ls\n");
+                    return;
+                } else if (pid_ls == 0) {
+                fprintf(stdout, "child: ls child will now run\n");
+                fprintf(stdout, "---------------------\n");
+
+                // Set fd[1] (stdout) to the write end of the pipe
+                if (dup2(pipefd[WRITE_END], STDOUT_FILENO) == -1) {
+                    fprintf(stderr, "ls dup2 failed\n");
+                    return;
+                }
+
+                // Close the pipe now that we've duplicated it
+                close(pipefd[READ_END]);
+                close(pipefd[WRITE_END]);
+
+                // Setup the arguments/environment to call
+                /*char *new_argv[] = { "/bin/ls", "-la", argv[1], 0 };
+                char *envp[] = { "HOME=/", "PATH=/bin:/usr/bin", "USER=brandon", 0 };
+
+                // Call execve(2) which will replace the executable image of this
+                // process
+                new_argv[0] = "ls";
+                new_argv[1] = 0; */
+                fprintf(stderr,"[%s]\n",cmds[0]);
+                fprintf(stderr, "Command: %s\nArgs[0]: %s\nArgs[1]: %s\n", cmds[0], cmds[0], cmds[1]);		
+
+                //execvp("ls", new_argv);  // Try putting in cmds[0] for "ls"
+                execvp(cmds[0], cmds);
+                // Execution will never continue in this process unless execve returns
+                // because of an error
+
+                fprintf(stderr, "child: Oops, %s failed!\n", cmds[0]);
+                fprintf(stderr, "Errno(%d): %s\n", errno, strerror(errno));
+                return ;
             }
-            else {
-                dup2( fd[ 0 ], 0 );
-                close( fd[ 0 ] );
-                execlp( "/bin/wc", "-l", NULL );
-            }*/
+
+            // Parent doesn't need the pipes
+            close(pipefd[READ_END]);
+            close(pipefd[WRITE_END]);
+
+            fprintf(stdout, "parent: Parent will now wait for children to finish execution\n");
+
+            // Wait for all children to finish
+            while (wait(NULL) > 0);
+
+            fprintf(stdout, "---------------------\n");
+            fprintf(stdout, "parent: Children has finished execution, parent is done\n");
             return;
-        } 
+        }
         
     
         /*fprintf("PRINTING HERE argv[0]: %s\n", argv[0]);
         fprintf("PRINTING HERE argv: %s\n", argv);*/
         if (!builtin_command(argv)) {
+            
             if ((pid = fork()) == 0) {  /*Child runs user job  */
                 if (execvp(argv[0], argv) < 0) {
                     printf("%s: Command not found.\n", argv[0]);
@@ -163,107 +270,87 @@ void eval (char *cmdline)
                 }
 
             }
+                // Instantiate statistics depnding on if the user wanted to show the statistics.
+                getrusage(RUSAGE_SELF, &usage);
+                if (showU) startU = usage.ru_utime;
+                if (showS) startS = usage.ru_stime;
+                if (showP) startP = usage.ru_majflt;
+                if (showV) startV = usage.ru_nvcsw;
+                if (showI) startI = usage.ru_nivcsw;
 
             /* Parent waits for foreground job to terminate */
             if (!bg) {
                 int status;
-                if (waitpid(pid, &status, 0) < 0)
+                if (waitpid(pid, &status, WUNTRACED) < 0) // Using WUNTRACED coupled with signals ^C & ^Z
                     unix_error("waitfg: waitpid error");
             }
-            else
-                printf("%d %s", pid, cmdline);           
+            else{
+                printf("%d %s", pid, cmdline);        
+            }
+                    /* Statistics Print out in to show computer statsitics in the order specified by the user */
+                getrusage(RUSAGE_SELF, &usage);
+                for (int i = 0; i < strlen(statOrder); i++) { // Uses a for loop to process the order char* array set up.
+                    if (statOrder[i] == 'u')
+                    {
+                        endU = usage.ru_utime;
+                        printf("Started at: %ld.%lds | ", startU.tv_sec, startU.tv_usec);
+                        printf("Ended at: %ld.%lds\n", endU.tv_sec, endU.tv_usec);
+                    }
+                    if (statOrder[i] == 's')
+                    {
+                        endS = usage.ru_stime;
+                        printf("Started at: %ld.%lds | ", startS.tv_sec, startS.tv_usec);
+                        printf("Ended at: %ld.%lds\n", endS.tv_sec, endS.tv_usec);
+                    }
+                    if (statOrder[i] == 'p')
+                    {
+                        endP = usage.ru_majflt;
+                        printf("Number of Page Faults | %ld\n", endP, endP);
+                    }
+                    if (statOrder[i] == 'v')
+                    {
+                        printf("Started at: %ld.%lds | ", startV, startV);
+                        printf("Ended at: %ld.%lds\n", endV, endV);
+                    }
+                    if (statOrder[i] == 'i')
+                    {
+                        endI = usage.ru_nivcsw;
+                        printf("Started at: %ld.%lds | ", startI, startI);
+                        printf("Ended at: %ld.%lds\n", endI, endI);
+                    }
+                }
+                   
         }
 
-        getrusage(RUSAGE_SELF, &usage);
-        for (int i = 0; i < strlen(statOrder); i++) {
-            if (statOrder[i] == 'u')
-            {
-                endU = usage.ru_utime;
-                printf("Started at: %ld.%lds | ", startU.tv_sec, startU.tv_usec);
-                printf("Ended at: %ld.%lds\n", endU.tv_sec, endU.tv_usec);
-            }
-             if (statOrder[i] == 's')
-            {
-                endS = usage.ru_stime;
-                printf("Started at: %ld.%lds | ", startS.tv_sec, startS.tv_usec);
-                printf("Ended at: %ld.%lds\n", endS.tv_sec, endS.tv_usec);
-            }
-             if (statOrder[i] == 'p')
-            {
-                endP = usage.ru_majflt;
-                printf("Number of Page Faults | %ld\n", endP, endP);
-            }
-             if (statOrder[i] == 'v')
-            {
-                printf("Started at: %ld.%lds | ", startV, startV);
-                printf("Ended at: %ld.%lds\n", endV, endV);
-            }
-             if (statOrder[i] == 'i')
-            {
-                endI = usage.ru_nivcsw;
-                printf("Started at: %ld.%lds | ", startI, startI);
-                printf("Ended at: %ld.%lds\n", endI, endI);
-            }
-        }
+        
 
         return;
 }
 
 
-char* retrieveEnvironVar(char* inputVariable) 
+char* retrieveEnvironVar(char* inputVariable)  // Returns the environment variable requested by the user.
 {
     return getenv(inputVariable);
 }
 /* If first arg is a builtin command, run it and return true */
 int builtin_command(char **argv) 
 {
-
-    /*char *word = argv;
-    printf("%d\n", (unsigned)strlen(argv));
-    printf("%s\n", argv[0] + 2); // 2 chars away
-    printf("%d\n", (unsigned)strlen(word));
-    char *totalString ="";
-    totalString = malloc((signed)strlen(argv));
-    char **curPointer = argv;
-    printf("%s\n", curPointer); // 2 chars away
-
-    //while ()
-    for (int i = 0; i < (signed)strlen(argv)+3; i++)
-    {
-        //strcpy(totalString, argv[0] + i);
-        strcat(totalString, argv[0] + i);
-        printf("%s\n", totalString);
-    }*/
     
-    /*char values[] = "";
-
-    //strcat(values, argv[0] + 1);
-    //printf("%s\n", values);
-    //return 1;
-    if (*(argv) != NULL)
-    {
-        for (int i = 0; i < 9; i++)
-        {
-            char *combo = malloc(strlen(*(argv[i]))+strlen(*(argv[i]+1))+1);
-            strcpy(combo, *(argv[i]));
-            strcat(combo, *(argv[i]+1));
-            printf("%s\n", combo);
-            return 1;
-        }
-        return 1;
+    if (!strcmp(argv[0], "fg")) {
+        signal(SIGCONT, argv[1]);
     }
-    printf("%s", *(argv));*/
 
+    // for the length of the word looks for the = sign.
     int lengthValue = strlen(argv[0]);
     for(int i = 0; i < lengthValue; i++) {
 
         if(*(argv[0]+i)== '=')
         {
             char* newVar = malloc(i+1);
-            memcpy(newVar, *(&(argv[0])), i);
+            memcpy(newVar, *(&(argv[0])), i); // Saves the variable as the chars leading up to the = symbol.
 
             char newVarsValue[(lengthValue - i)];
-            memcpy(newVarsValue,  &*(argv[0]+i+1), lengthValue);
+            memcpy(newVarsValue,  &*(argv[0]+i+1), lengthValue); // Saves the value as the chars after the = symbol.
             newVarsValue[lengthValue] = "\0";
 
             char *oldValue[100];
@@ -289,8 +376,6 @@ int builtin_command(char **argv)
     if (*(argv[0]) == '$') /* Checks for the $ command */
     {
         char **followingString = argv[0] + 1;
-        //printf("%s\n", followingString);
-        //printf("%s\n", retrieveEnvironVar(followingString));
         char **a = retrieveEnvironVar(followingString); //
         printf("%s\n", retrieveEnvironVar(followingString));
         argv[1] = a;
@@ -301,9 +386,7 @@ int builtin_command(char **argv)
         if (*(argv[1]) == '$') /* echo is read */
         {
                 char **followingString = argv[1] + 1;
-                char **a = retrieveEnvironVar(followingString); // 
-                //argv[0] = malloc(strlen(4 + 1 + strlen(argv[0])));
-                //strcat("/bin/", argv[0])f;
+                char **a = retrieveEnvironVar(followingString); 
                 argv[1] = a;
                 return 0;
         }
@@ -465,32 +548,15 @@ int builtin_command(char **argv)
     return 0;                     /* Not a builtin command */
 }
 
-void sigint_handler(int signal)
-{
-    kill(getpid(), SIGINT);
-    isRunning = true;
-}
-void sigtstp_handler(int signal)
-{
-    isRunning = true;
-    //kill(getpid(), SIGTSTP);
-    
-    //exit(0);
-}
-
-void sigkill(int p)
-{
-    isRunning = true;
-}
-
 int main()
 {
         char cmdline[MAXLINE]; /* Command line */
 
-        // signal(SIGINT, sigint_handler);
-        // signal(SIGTSTP, sigtstp_handler);
-
-        while (!isRunning) {
+        signal(SIGINT, sigint_handler);
+        signal(SIGTSTP, sigtstp_handler);
+        signal(SIGCONT, sigtstp_handler);
+        //dup2(1, 2);
+        while (isRunning) {
             /* Read */
             printf ("lsh> ");
             fgets(cmdline, MAXLINE, stdin);
