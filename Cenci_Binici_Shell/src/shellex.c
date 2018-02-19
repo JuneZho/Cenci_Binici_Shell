@@ -111,25 +111,13 @@ void eval (char *cmdline)
         char entireInput[inputLength + 1];
         entireInput[inputLength + 1] = '\0';
         strcpy(entireInput, cmdline);
-        int j = 0;
         int pipeAmount = 0;
         for (int i = 0; i < inputLength; i++) {
             if (entireInput[i] == '|') 
             {
-                
-                /*int lengthHere = i - 1 - j;
-                char hereNow = malloc(100);
-                memcpy(hereNow, cmdline[j], i-2);
-                //strncat(hereNow, cmdline[j], i-2);
-                //printf("THE WORD BEITH: [%s]\n", hereNow);
-                j = i + 1;*/
                 pipeAmount++;
                 pipesExist = true;
             }
-            // char* finalString[inputLength - j];
-            // strncat(finalString, cmdline[j], strlen(cmdline));
-            // printf("LAST WORD BEITH: [%s]\n", finalString);
-
         }
 
         /* Detecting if pipes exist within the user input and then parsing the lien with strtok. */
@@ -138,17 +126,10 @@ void eval (char *cmdline)
             char *pt;
             pt = strtok (cmdline," | "); // Looking for the pipe | symbol
             int valueHere = 0;
-            int a = 0;
-            //int counter = 0;
             while (pt != NULL) {
                 cmds[valueHere] = pt;
-                //cmds[a][valueHere] = pt;
-                printf("HERE IS: [%s]\n", pt);
                 valueHere++;
                 pt = strtok (NULL, " | "); // Nulling the array parsed.
-                /*char *pt2;
-                pt2 = strtok(pt, " ");*/
-                //cmds[a][valueHere];
                 
                 if (pt == NULL)
                 {
@@ -156,20 +137,11 @@ void eval (char *cmdline)
                     lastVal[strlen(lastVal) - 1] = 0;
                     cmds[valueHere - 1] = lastVal;
                 }
-                a++;
                 
             }
-            /*for(int x = 0; x < pipeAmount+1; x++){
-                for(int y = 0; y < pipeAmount+1; y++){
-                    cmds[x][y] = '\0'; // finishes the command array list with the terminal 0 in the string.
-                }
-            }*/
-            cmds[valueHere] = '\0';
-            // cmds[pipeAmount + 1] = '\0'; // finishes the command array list with the terminal 0 in the string.
-            for (int i = 0; i < pipeAmount + 2; i++)
-            {
-                printf("Yes! [%s]\n", cmds[i]);
-            }
+
+            //cmds[valueHere] = '\0';
+            cmds[pipeAmount + 1] = '\0'; // finishes the command array list with the terminal 0 in the string.
 
             int pid, pid_ls, pid_grep;
             int pipefd[2];

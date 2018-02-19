@@ -16,12 +16,25 @@ To run the lsh: Open up a terminal window and change directory to be inside the 
 
 Afterwords the user will be inside the lsh and can run commands designated and described within the minishell.
 
+|-----------------------------
+| user> make build
+|-----------------------------
+
+To insert the man page within the man folder, the following command should be run in relation to the Makefile:
+
 The man page for the minishell can be found within the /src/man/ folder. This can be run within the lsh minishell with the following command:
 |-----------------------------
 | lsh> man ../../src/man/./lsh
 |-----------------------------
 
 After that you can refer to the man page for any help with commands to use!
+
+To clean up and delete all compiled and outputted files related to build of the project run the following command with the src folder.
+
+|-----------------------------
+| user> make clean
+|-----------------------------
+
 Good luck and happy processing!
 
 

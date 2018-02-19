@@ -14,5 +14,9 @@ shellex.o:	shellex.c
 
 csapp.o:	csapp.c csapp.h
 		$(CC) $(CFLAGS) csapp.c
+
 clean:
-		rm -f *.o; rm ../install/bin/lsh
+		rm -f *.o; rm ../install/bin/lsh; rm ../install/man/lsh
+
+build:
+		cp man/lsh ../install/man/lsh
