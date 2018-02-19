@@ -7,14 +7,12 @@ CFLAGS= -c -Wall
 default: all
 
 all:		shellex.o csapp.o
-		$(CC) shellex.o -o lsh
+		$(CC) shellex.o -o ../install/bin/lsh
 
 shellex.o:	shellex.c
 		$(CC) $(CFLAGS) shellex.c
 
 csapp.o:	csapp.c csapp.h
 		$(CC) $(CFLAGS) csapp.c
-	
 clean:
-	rm -f *.o; rm lsh
-	
+		rm -f *.o; rm ../install/bin/lsh
